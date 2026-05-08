@@ -3,10 +3,10 @@ const Schema = mongoose.Schema;
 const Review = require("./review.js")
 
 const ListingSchema = new Schema({
-    title: { 
+    title: {
         type: String,
         required: true
-     },
+    },
     description: String,
     image: {
         filename: {
@@ -27,16 +27,21 @@ const ListingSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: "Review"
         }
-    ]
+    ],
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+
+    }
 });
 
 // AFTER DELETING LISTING REVIEWS SHOULD ALSO DELETE
 // POST MONGOOSE MIDDLEWARE 
-ListingSchema.post("findOneAndDelete", async (listing)=>{
-    if(listing){
-        await Review.deleteMany({_id: {$in: listing.reviews}});
+ListingSchema.post("findOneAndDelete", async (listing) => {
+    if (listing) {
+        await Review.deleteMany({ _id: { $in: listing.reviews } });
     }
-    
+
 })
 
 const Listing = mongoose.model("Listing", ListingSchema);
