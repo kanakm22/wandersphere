@@ -2,9 +2,9 @@ const Listing = require("../models/listing.js");
 
 module.exports.index =
     async (req, res) => {
-    const allListings = await Listing.find({});
-    res.render("./listings/index.ejs", { allListings });
-}
+        const allListings = await Listing.find({});
+        res.render("./listings/index.ejs", { allListings });
+    }
 
 module.exports.renderNewForm = (req, res) => {
     res.render("./listings/new.ejs");
@@ -22,11 +22,14 @@ module.exports.showListing = async (req, res) => {
 }
 
 module.exports.createListing = async (req, res) => {
+    let url = req.file.path;
+    let filename = req.file.filename;
     const newListing = new Listing(req.body.listing);
     // Manually fix the image format before saving
     newListing.image = { url: req.body.listing.image, filename: "listingimage" };
     // to automatically add username to new listing created
     newListing.owner = req.user._id;
+    newListing.image = { url, filename };
     await newListing.save();
     req.flash("success", "New Listing Created");
     res.redirect("/listings");
@@ -41,20 +44,24 @@ module.exports.renderEditForm = async (req, res) => {
         return res.redirect("/listings");
     }
 
-    res.render("./listings/edit.ejs", { listing })
+    let originalImageUrl = listing.image.url;
+    originalImageUrl.replace("/upload", "/upload/h_300,w_250");
+
+    res.render("./listings/edit.ejs", { listing, originalImageUrl })
 }
 
 module.exports.updateListing = async (req, res) => {
     let { id } = req.params;
 
     let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+    if (typeof req.file != "undefined") {
+        let url = req.file.path;
+        let filename = req.file.filename;
 
-    if (typeof req.body.listing.image !== "undefined") {
-        let url = req.body.listing.image;
-        let filename = "listingimage";
         listing.image = { url, filename };
         await listing.save();
     }
+
     req.flash("success", "Listing Updated");
 
 
